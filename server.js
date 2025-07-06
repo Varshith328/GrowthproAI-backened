@@ -6,11 +6,23 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ✅ Handle multiple allowed origins from .env (comma-separated)
+const allowedOrigins = (process.env.CLIENT_URL || '').split(',').map(origin => origin.trim());
+
+// ✅ CORS Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like Postman or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed from origin: ${origin}`));
+    }
+  },
   credentials: true
 }));
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
