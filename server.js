@@ -6,50 +6,57 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Handle multiple allowed origins from .env (comma-separated)
-const allowedOrigins = (process.env.CLIENT_URL || '').split(',').map(origin => origin.trim());
+// ✅ Allow multiple origins from .env (comma-separated)
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map(origin => origin.trim());
 
-// ✅ CORS Middleware
+// ✅ CORS middleware with dynamic origin check
 app.use(cors({
-  origin: process.env.CLIENT_URL,  // ✅ This must match your frontend URL exactly
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed from origin: ${origin}`));
+    }
+  },
   credentials: true
 }));
-// Middleware
+
+// ✅ Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// ✅ Routes
 app.use('/api', businessRoutes);
 
-// Health check endpoint
+// ✅ Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     message: 'GrowthProAI Server is running!',
     timestamp: new Date().toISOString()
   });
 });
 
-// Error handling middleware
+// ✅ Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Something went wrong!',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
 
-// 404 handler
+// ✅ 404 fallback
 app.use('*', (req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Route not found',
     message: `The route ${req.originalUrl} does not exist`
   });
 });
 
-// Start the server
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 GrowthProAI Server running on port ${PORT}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-  console.log(`📊 Business API: http://localhost:${PORT}/api/business-data`);
 });
