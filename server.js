@@ -11,17 +11,9 @@ const allowedOrigins = (process.env.CLIENT_URL || '').split(',').map(origin => o
 
 // ✅ CORS Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like Postman or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS not allowed from origin: ${origin}`));
-    }
-  },
+  origin: process.env.CLIENT_URL,  // ✅ This must match your frontend URL exactly
   credentials: true
 }));
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
